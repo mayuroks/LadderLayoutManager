@@ -8,6 +8,8 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * TODO Step 1 return layout params
@@ -35,8 +37,9 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
     private int mChildPeekSize;
     private int mChildPeekSizeInput;
 
-    // TODO change variable name to mChildLayoutParams
-    private int[] mChildSize;
+    private static final String CHILD_WIDTH = "childWidth";
+    private static final String CHILD_HEIGHT = "childHeight";
+    private Map<String, Integer> mChildXYParams;
 
     // TODO change variable name to is
     private boolean mCheckedChildSize;
@@ -44,14 +47,13 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
     private int mChildCount;
     private boolean mReverse;
     private ChildDecorateHelper mDecorateHelper;
-    private float mVanishOffset = 0;
     private int mMaxItemLayoutCount;
     private int UNLIMITED = 0;
 
     @Override
     public RecyclerView.LayoutParams generateDefaultLayoutParams() {
         // TODO Step 1 return layout params
-        return new RecyclerView.LayoutParams(mChildSize[0], mChildSize[1]);
+        return new RecyclerView.LayoutParams(getChildWidth(), getChildHeight());
     }
 
     public HzLayoutManager2(float itemHeightWidthRatio, float scale, int orientation) {
@@ -60,7 +62,9 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
         mOrientation = orientation;
 
         // setup child layout params
-        mChildSize = new int[2];
+//        mChildSize = new int[2];
+
+        mChildXYParams = new HashMap<>();
 
         // setup interpolator
         mInterpolator = new DecelerateInterpolator();
@@ -78,18 +82,20 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
 
         // TODO step 4 setup child view size based on orientation
         if (!mCheckedChildSize) {
-            if (mOrientation == VERTICAL) {
-                mChildSize[0] = getHorizontalSpace();
-                mChildSize[1] = (int) (mItemHeightWidthRatio * mChildSize[0]);
-            } else {
-                mChildSize[1] = getVerticalSpace();
-                mChildSize[0] = (int) (mChildSize[1] / mItemHeightWidthRatio);
-            }
+//            if (mOrientation == VERTICAL) {
+//                mChildSize[0] = getHorizontalSpace();
+//                mChildSize[1] = (int) (mItemHeightWidthRatio * mChildSize[0]);
+//            } else {
+//                mChildSize[1] = getVerticalSpace();
+//                mChildSize[0] = (int) (mChildSize[1] / mItemHeightWidthRatio);
+//            }
+
+            setChildSize(mOrientation);
 
             // TODO childPeekSize depends on mOrientation
             // refactor this
             mChildPeekSize = mChildPeekSizeInput == 0 ?
-                    (int) (mChildSize[mOrientation] * DEFAULT_CHILD_LAYOUT_OFFSET) : mChildPeekSizeInput;
+                    (int) (getChildSize(mOrientation) * DEFAULT_CHILD_LAYOUT_OFFSET) : mChildPeekSizeInput;
             Log.i(TAG, "onLayoutChildren: mChildPeekSize " + mChildPeekSize);
 
             mCheckedChildSize = true;
@@ -99,7 +105,7 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
 
         // TODO setup scroll offset, what happens when its not setup
         if (mReverse) { // figure out how reverse works
-            mScrollOffset += (itemCount - mChildCount) * mChildSize[mOrientation];
+            mScrollOffset += (itemCount - mChildCount) * getChildSize(mOrientation);
         }
 
         mChildCount = itemCount;
@@ -114,20 +120,20 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
          * This method is called when laying out children and
          * scrolling vertically or updating
          * */
-        int bottomItemPosition = (int) Math.floor(mScrollOffset / mChildSize[mOrientation]);//>=1
+        int bottomItemPosition = (int) Math.floor(mScrollOffset / getChildSize(mOrientation));//>=1
 
-        int bottomItemVisibleSize = mScrollOffset % mChildSize[mOrientation];
+        int bottomItemVisibleSize = mScrollOffset % getChildSize(mOrientation);
 
         // offsetFactor [0,1)
         final float offsetFactor = mInterpolator.getInterpolation(
-                bottomItemVisibleSize * 1.0f / mChildSize[mOrientation]);
+                bottomItemVisibleSize * 1.0f / getChildSize(mOrientation));
 
-        Log.i(TAG, "fill: bottomItemPosition " + bottomItemPosition + " " + bottomItemVisibleSize + " " + offsetFactor + " " + mChildSize[mOrientation]);
+        Log.i(TAG, "fill: bottomItemPosition " + bottomItemPosition + " " + bottomItemVisibleSize + " " + offsetFactor + " " + getChildSize(mOrientation));
         final int recyclerViewSpace = mOrientation == VERTICAL ? getVerticalSpace() : getHorizontalSpace();
 
         ArrayList<ItemLayoutInfo> layoutInfos = new ArrayList<>();
 
-        for (int i = bottomItemPosition - 1, j = 1, remainSpace = recyclerViewSpace - mChildSize[mOrientation]; i >= 0; i--, j++) {
+        for (int i = bottomItemPosition - 1, j = 1, remainSpace = recyclerViewSpace - getChildSize(mOrientation); i >= 0; i--, j++) {
             Log.i(TAG, "forloop: " + remainSpace + " " + recyclerViewSpace);
             double maxOffset = mChildPeekSize * Math.pow(mScale, j);
 
@@ -168,7 +174,7 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
             final int start = recyclerViewSpace - bottomItemVisibleSize;
 
             layoutInfos.add(new ItemLayoutInfo(start,
-                    bottomItemVisibleSize * 1.0f / mChildSize[mOrientation],
+                    bottomItemVisibleSize * 1.0f / getChildSize(mOrientation),
                     start * 1.0f / recyclerViewSpace).setIsBottom());
         } else {
             Log.i(TAG, "bottomItemPosition >= mChildCount " + bottomItemPosition + " " + mChildCount);
@@ -180,7 +186,7 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
         // Check if a child position is out of visible range
         final int startPos = bottomItemPosition - (layoutCount - 1);
         final int endPos = bottomItemPosition;
-        
+
         final int childCount = getChildCount();
         for (int i = childCount - 1; i >= 0; i--) {
             View childView = getChildAt(i);
@@ -208,13 +214,13 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
 
         // TODO layout the view with decorated margins
         if (mOrientation == VERTICAL) {
-            int left = (int) (getPaddingLeft() + (0.5 * mVanishOffset));
+            int left = getPaddingLeft();
             layoutDecoratedWithMargins(view, left, layoutInfo.start
-                    , left + mChildSize[0], layoutInfo.start + mChildSize[1]);
+                    , left + getChildWidth(), layoutInfo.start + getChildHeight());
         } else {
-            int top = (int) (getPaddingTop() + (0.5 * mVanishOffset));
+            int top = getPaddingTop();
             layoutDecoratedWithMargins(view, layoutInfo.start, top
-                    , layoutInfo.start + mChildSize[0], top + mChildSize[1]);
+                    , layoutInfo.start + getChildWidth(), top + getChildHeight());
         }
 
         if (mDecorateHelper != null) {
@@ -257,8 +263,8 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
          * What does this formula do
          * */
         Log.i(TAG, "makeScrollOffsetWithinRange: before " + scrollOffset);
-        int offset = Math.max(mChildSize[mOrientation], scrollOffset);
-        int childCountOffset = mChildCount * mChildSize[mOrientation];
+        int offset = Math.max(getChildSize(mOrientation), scrollOffset);
+        int childCountOffset = mChildCount * getChildSize(mOrientation);
 
         Log.i(TAG, "makeScrollOffsetWithinRange: after " + offset + " " + childCountOffset);
         return Math.min(offset, childCountOffset);
@@ -268,9 +274,9 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
     private void measureChildWithExactlySize(View child) {
         RecyclerView.LayoutParams lp = (RecyclerView.LayoutParams) child.getLayoutParams();
         final int widthSpec = View.MeasureSpec.makeMeasureSpec(
-                mChildSize[0] - lp.leftMargin - lp.rightMargin, View.MeasureSpec.EXACTLY);
+                getChildWidth() - lp.leftMargin - lp.rightMargin, View.MeasureSpec.EXACTLY);
         final int heightSpec = View.MeasureSpec.makeMeasureSpec(
-                mChildSize[1] - lp.topMargin - lp.bottomMargin, View.MeasureSpec.EXACTLY);
+                getChildHeight() - lp.topMargin - lp.bottomMargin, View.MeasureSpec.EXACTLY);
         child.measure(widthSpec, heightSpec);
     }
 
@@ -329,8 +335,8 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
         /**
          * @param child
          * @param posoffsetFactor childview相对于自身起始位置的偏移量百分比范围[0，1)
-         * @param layoutPercent    childview 在整个布局中的位置百分比
-         * @param isBottom         childview 是否处于底部
+         * @param layoutPercent   childview 在整个布局中的位置百分比
+         * @param isBottom        childview 是否处于底部
          */
         void decorateChild(View child, float posoffsetFactor, float layoutPercent, boolean isBottom);
     }
@@ -345,6 +351,42 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
         @Override
         public void decorateChild(View child, float posoffsetFactor, float layoutPercent, boolean isBottom) {
             ViewCompat.setElevation(child, (float) (layoutPercent * mElevation * 0.7 + mElevation * 0.3));
+        }
+    }
+
+    private int getChildSize(int orientation) {
+        if (orientation == VERTICAL) {
+            return mChildXYParams.get(CHILD_HEIGHT);
+        } else {
+            return mChildXYParams.get(CHILD_WIDTH);
+        }
+    }
+
+    private int getChildWidth() {
+        return mChildXYParams.get(CHILD_WIDTH);
+    }
+
+    private int getChildHeight() {
+        return mChildXYParams.get(CHILD_HEIGHT);
+    }
+
+    private void setChildSize(int orientation) {
+        int childHeight, childWidth;
+
+        switch (orientation) {
+            case VERTICAL:
+                childWidth = getHorizontalSpace();
+                childHeight = (int) (mItemHeightWidthRatio * childWidth);
+                mChildXYParams.put(CHILD_WIDTH, childWidth);
+                mChildXYParams.put(CHILD_HEIGHT, childHeight);
+                break;
+
+            case HORIZONTAL:
+                childHeight = getVerticalSpace();
+                childWidth = (int) (childHeight / mItemHeightWidthRatio);
+                mChildXYParams.put(CHILD_WIDTH, childWidth);
+                mChildXYParams.put(CHILD_HEIGHT, childHeight);
+                break;
         }
     }
 }
