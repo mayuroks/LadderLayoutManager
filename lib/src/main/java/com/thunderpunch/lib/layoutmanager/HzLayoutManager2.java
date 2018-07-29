@@ -88,8 +88,9 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
 
             // TODO childPeekSize depends on mOrientation
             // refactor this
-            mChildPeekSize = mChildPeekSize == 0 ?
+            mChildPeekSize = mChildPeekSizeInput == 0 ?
                     (int) (mChildSize[mOrientation] * DEFAULT_CHILD_LAYOUT_OFFSET) : mChildPeekSizeInput;
+            Log.i(TAG, "onLayoutChildren: mChildPeekSize " + mChildPeekSize);
 
             mCheckedChildSize = true;
         }
@@ -128,7 +129,6 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
             double maxOffset = mChildPeekSize * Math.pow(mScale, j);
 
             int start = (int) (remainSpace - offsetPercent * maxOffset);
-            float itemScale = (float) (Math.pow(mScale, j - 1) * (1 - offsetPercent * (1 - mScale)));
             float layoutPercent = start * 1.0f / recyclerViewSpace;
 
             ItemLayoutInfo info
@@ -274,6 +274,7 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
     }
 
     public void setChildPeekSize(int childPeekSize) {
+        Log.i(TAG, "setChildPeekSize: called");
         mChildPeekSizeInput = childPeekSize;
         mCheckedChildSize = false;
         if (getChildCount() > 0) {
@@ -297,7 +298,7 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
     private static class ItemLayoutInfo {
         float layoutPercent;
         float positionOffsetPercent;
-        int start;
+        int start; // start of item
         boolean isBottom;
 
         ItemLayoutInfo(int start, float positionOffset, float layoutPercent) {
