@@ -4,7 +4,6 @@ import android.graphics.PointF;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.v4.view.ViewCompat;
-import android.support.v7.widget.LinearSmoothScroller;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
@@ -12,13 +11,9 @@ import android.view.animation.Interpolator;
 
 import java.util.ArrayList;
 
-/**
- * Created by thunderPunch on 2017/2/15
- * Description:
- */
-
-public class LadderLayoutManager extends RecyclerView.LayoutManager
+public class HzLayoutManager extends RecyclerView.LayoutManager
         implements RecyclerView.SmoothScroller.ScrollVectorProvider {
+
     private static final int INVALIDATE_SCROLL_OFFSET = Integer.MAX_VALUE;
     private static final float DEFAULT_CHILD_LAYOUT_OFFSET = 0.2f;
     public static final int UNLIMITED = 0;
@@ -36,10 +31,10 @@ public class LadderLayoutManager extends RecyclerView.LayoutManager
     private float mVanishOffset = 0;
     private Interpolator mInterpolator;
     private int mOrientation;
-    private ChildDecorateHelper mDecorateHelper;
+    private HzLayoutManager.ChildDecorateHelper mDecorateHelper;
     private int mMaxItemLayoutCount;
 
-    public LadderLayoutManager(float itemHeightWidthRatio) {
+    public HzLayoutManager(float itemHeightWidthRatio) {
         this(itemHeightWidthRatio, 0.9f, VERTICAL);
     }
 
@@ -48,7 +43,7 @@ public class LadderLayoutManager extends RecyclerView.LayoutManager
      * @param scale                chidview每一层级相对于上一层级的缩放量
      * @param orientation          布局方向
      */
-    public LadderLayoutManager(float itemHeightWidthRatio, float scale, int orientation) {
+    public HzLayoutManager(float itemHeightWidthRatio, float scale, int orientation) {
         this.mItemHeightWidthRatio = itemHeightWidthRatio;
         this.mOrientation = orientation;
         this.mScale = scale;
@@ -61,7 +56,7 @@ public class LadderLayoutManager extends RecyclerView.LayoutManager
         return new RecyclerView.LayoutParams(mChildSize[0], mChildSize[1]);
     }
 
-    public LadderLayoutManager setChildDecorateHelper(ChildDecorateHelper layoutHelper) {
+    public HzLayoutManager setChildDecorateHelper(HzLayoutManager.ChildDecorateHelper layoutHelper) {
         mDecorateHelper = layoutHelper;
         return this;
     }
@@ -120,28 +115,25 @@ public class LadderLayoutManager extends RecyclerView.LayoutManager
     }
 
 
-    /**
-     * @param direction 滑动方向，正负同{@link #mScrollOffset}的增减
-     * @param fixValue  同向修正值
-     * @return
-     */
-    public int getFixedScrollPosition(int direction, float fixValue) {
-        if (mCheckedChildSize) {
-            if (mScrollOffset % mChildSize[mOrientation] == 0) {
-                return RecyclerView.NO_POSITION;
-            }
-            float position = mScrollOffset * 1.0f / mChildSize[mOrientation];
-            return convert2AdapterPosition((int) (direction > 0 ? position + fixValue : position + (1 - fixValue)) - 1);
-        }
-        return RecyclerView.NO_POSITION;
-    }
+//    public int getFixedScrollPosition(int direction, float fixValue) {
+//        if (mCheckedChildSize) {
+//            if (mScrollOffset % mChildSize[mOrientation] == 0) {
+//                return RecyclerView.NO_POSITION;
+//            }
+//            float position = mScrollOffset * 1.0f / mChildSize[mOrientation];
+//            return convert2AdapterPosition((int) (direction > 0 ? position + fixValue : position + (1 - fixValue)) - 1);
+//        }
+//        return RecyclerView.NO_POSITION;
+//    }
 
 
-    @Override
-    public void onMeasure(RecyclerView.Recycler recycler, RecyclerView.State state, int widthSpec, int heightSpec) {
-        super.onMeasure(recycler, state, widthSpec, heightSpec);
-        mCheckedChildSize = false;
-    }
+//    @Override
+//    public void onMeasure(RecyclerView.Recycler recycler,
+//                          RecyclerView.State state,
+//                          int widthSpec, int heightSpec) {
+//        super.onMeasure(recycler, state, widthSpec, heightSpec);
+//        mCheckedChildSize = false;
+//    }
 
     @Override
     public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
@@ -170,19 +162,24 @@ public class LadderLayoutManager extends RecyclerView.LayoutManager
         fill(recycler);
     }
 
+
     public void fill(RecyclerView.Recycler recycler) {
+        /*
+        * This method is called when laying out children and
+        * scrolling vertically or updating
+        * */
         int bottomItemPosition = (int) Math.floor(mScrollOffset / mChildSize[mOrientation]);//>=1
         int bottomItemVisibleSize = mScrollOffset % mChildSize[mOrientation];
         final float offsetPercent = mInterpolator.getInterpolation(
                 bottomItemVisibleSize * 1.0f / mChildSize[mOrientation]);//[0,1)
         final int space = mOrientation == VERTICAL ? getVerticalSpace() : getHorizontalSpace();
 
-        ArrayList<ItemLayoutInfo> layoutInfos = new ArrayList<>();
+        ArrayList<HzLayoutManager.ItemLayoutInfo> layoutInfos = new ArrayList<>();
         for (int i = bottomItemPosition - 1, j = 1, remainSpace = space - mChildSize[mOrientation];
              i >= 0; i--, j++) {
             double maxOffset = mChildPeekSize * Math.pow(mScale, j);
             int start = (int) (remainSpace - offsetPercent * maxOffset);
-            ItemLayoutInfo info = new ItemLayoutInfo(start,
+            HzLayoutManager.ItemLayoutInfo info = new HzLayoutManager.ItemLayoutInfo(start,
                     (float) (Math.pow(mScale, j - 1) * (1 - offsetPercent * (1 - mScale))),
                     offsetPercent,
                     start * 1.0f / space
@@ -210,7 +207,7 @@ public class LadderLayoutManager extends RecyclerView.LayoutManager
 
         if (bottomItemPosition < mChildCount) {
             final int start = space - bottomItemVisibleSize;
-            layoutInfos.add(new ItemLayoutInfo(start, 1.0f,
+            layoutInfos.add(new HzLayoutManager.ItemLayoutInfo(start, 1.0f,
                     bottomItemVisibleSize * 1.0f / mChildSize[mOrientation], start * 1.0f / space).
                     setIsBottom());
         } else {
@@ -236,13 +233,18 @@ public class LadderLayoutManager extends RecyclerView.LayoutManager
         }
     }
 
-    private void fillChild(View view, ItemLayoutInfo layoutInfo) {
+    private void fillChild(View view, HzLayoutManager.ItemLayoutInfo layoutInfo) {
+        // TODO add the view
         addView(view);
+
+        // TODO ???
         measureChildWithExactlySize(view);
+
         final int scaleFix = (int) (mChildSize[mOrientation] * (1 - layoutInfo.scaleXY) / 2);
         final float gap = (mOrientation == VERTICAL ? getHorizontalSpace() : getVerticalSpace())
                 - mChildSize[(mOrientation + 1) % 2] * layoutInfo.scaleXY;
 
+        // TODO layout the view with decorated margins
         if (mOrientation == VERTICAL) {
             int left = (int) (getPaddingLeft() + (gap * 0.5 * mVanishOffset));
             layoutDecoratedWithMargins(view, left, layoutInfo.start - scaleFix
@@ -252,8 +254,11 @@ public class LadderLayoutManager extends RecyclerView.LayoutManager
             layoutDecoratedWithMargins(view, layoutInfo.start - scaleFix, top
                     , layoutInfo.start + mChildSize[0] - scaleFix, top + mChildSize[1]);
         }
+
+        // TODO set scale of card based on layout info
         ViewCompat.setScaleX(view, layoutInfo.scaleXY);
         ViewCompat.setScaleY(view, layoutInfo.scaleXY);
+
         if (mDecorateHelper != null) {
             mDecorateHelper.decorateChild(view, layoutInfo.positionOffsetPercent, layoutInfo.layoutPercent, layoutInfo.isBottom);
         }
@@ -273,14 +278,14 @@ public class LadderLayoutManager extends RecyclerView.LayoutManager
     }
 
 
-    @Override
-    public int scrollVerticallyBy(int dy, RecyclerView.Recycler recycler, RecyclerView.State state) {
-        int pendingScrollOffset = mScrollOffset + dy;
-        mScrollOffset = makeScrollOffsetWithinRange(pendingScrollOffset);
-        fill(recycler);
-        return mScrollOffset - pendingScrollOffset + dy;
-    }
-
+    //    @Override
+//    public int scrollVerticallyBy(int dy, RecyclerView.Recycler recycler, RecyclerView.State state) {
+//        int pendingScrollOffset = mScrollOffset + dy;
+//        mScrollOffset = makeScrollOffsetWithinRange(pendingScrollOffset);
+//        fill(recycler);
+//        return mScrollOffset - pendingScrollOffset + dy;
+//    }
+//
     @Override
     public int scrollHorizontallyBy(int dx, RecyclerView.Recycler recycler, RecyclerView.State state) {
         int pendingScrollOffset = mScrollOffset + dx;
@@ -289,28 +294,29 @@ public class LadderLayoutManager extends RecyclerView.LayoutManager
         return mScrollOffset - pendingScrollOffset + dx;
     }
 
-    @Override
-    public void smoothScrollToPosition(RecyclerView recyclerView, RecyclerView.State state, int position) {
-        final LinearSmoothScroller linearSmoothScroller = new LinearSmoothScroller(recyclerView.getContext()) {
-            @Override
-            public int calculateDyToMakeVisible(final View view, final int snapPreference) {
-                if (mOrientation == VERTICAL) {
-                    return -calculateDistanceToPosition(getPosition(view));
-                }
-                return 0;
-            }
-
-            @Override
-            public int calculateDxToMakeVisible(final View view, final int snapPreference) {
-                if (mOrientation == HORIZONTAL) {
-                    return -calculateDistanceToPosition(getPosition(view));
-                }
-                return 0;
-            }
-        };
-        linearSmoothScroller.setTargetPosition(position);
-        startSmoothScroll(linearSmoothScroller);
-    }
+    //
+//    @Override
+//    public void smoothScrollToPosition(RecyclerView recyclerView, RecyclerView.State state, int position) {
+//        final LinearSmoothScroller linearSmoothScroller = new LinearSmoothScroller(recyclerView.getContext()) {
+//            @Override
+//            public int calculateDyToMakeVisible(final View view, final int snapPreference) {
+//                if (mOrientation == VERTICAL) {
+//                    return -calculateDistanceToPosition(getPosition(view));
+//                }
+//                return 0;
+//            }
+//
+//            @Override
+//            public int calculateDxToMakeVisible(final View view, final int snapPreference) {
+//                if (mOrientation == HORIZONTAL) {
+//                    return -calculateDistanceToPosition(getPosition(view));
+//                }
+//                return 0;
+//            }
+//        };
+//        linearSmoothScroller.setTargetPosition(position);
+//        startSmoothScroll(linearSmoothScroller);
+//    }
 
     /**
      * @return 当前位置与目标下标位视图的距离
@@ -321,20 +327,20 @@ public class LadderLayoutManager extends RecyclerView.LayoutManager
     }
 
 
-    @Override
-    public void scrollToPosition(int position) {
-        if (position > 0 && position < mChildCount) {
-            mScrollOffset = mChildSize[mOrientation] * (convert2LayoutPosition(position) + 1);
-            requestLayout();
-        }
-    }
+//    @Override
+//    public void scrollToPosition(int position) {
+//        if (position > 0 && position < mChildCount) {
+//            mScrollOffset = mChildSize[mOrientation] * (convert2LayoutPosition(position) + 1);
+//            requestLayout();
+//        }
+//    }
 
 
-    @Override
-    public boolean canScrollVertically() {
-        return mOrientation == VERTICAL;
-    }
-
+    //    @Override
+//    public boolean canScrollVertically() {
+//        return mOrientation == VERTICAL;
+//    }
+//
     @Override
     public boolean canScrollHorizontally() {
         return mOrientation == HORIZONTAL;
@@ -378,7 +384,7 @@ public class LadderLayoutManager extends RecyclerView.LayoutManager
             this.layoutPercent = percent;
         }
 
-        ItemLayoutInfo setIsBottom() {
+        HzLayoutManager.ItemLayoutInfo setIsBottom() {
             isBottom = true;
             return this;
         }
@@ -386,33 +392,33 @@ public class LadderLayoutManager extends RecyclerView.LayoutManager
     }
 
 
-    @Override
-    public Parcelable onSaveInstanceState() {
-        SavedState savedState = new SavedState();
-        savedState.scrollOffset = mScrollOffset;
-        savedState.reverse = mReverse;
-        savedState.vanishOffset = mVanishOffset;
-        savedState.scale = mScale;
-        savedState.childLayoutOffsetInput = mChildPeekSizeInput;
-        savedState.itemHeightWidthRatio = mItemHeightWidthRatio;
-        savedState.orientation = mOrientation;
-        return savedState;
-    }
-
-    @Override
-    public void onRestoreInstanceState(Parcelable state) {
-        if (state instanceof SavedState) {
-            SavedState s = (SavedState) state;
-            mScrollOffset = s.scrollOffset;
-            mReverse = s.reverse;
-            mVanishOffset = s.vanishOffset;
-            mScale = s.scale;
-            mChildPeekSizeInput = s.childLayoutOffsetInput;
-            mItemHeightWidthRatio = s.itemHeightWidthRatio;
-            mOrientation = s.orientation;
-            requestLayout();
-        }
-    }
+//    @Override
+//    public Parcelable onSaveInstanceState() {
+//        HzLayoutManager.SavedState savedState = new HzLayoutManager.SavedState();
+//        savedState.scrollOffset = mScrollOffset;
+//        savedState.reverse = mReverse;
+//        savedState.vanishOffset = mVanishOffset;
+//        savedState.scale = mScale;
+//        savedState.childLayoutOffsetInput = mChildPeekSizeInput;
+//        savedState.itemHeightWidthRatio = mItemHeightWidthRatio;
+//        savedState.orientation = mOrientation;
+//        return savedState;
+//    }
+//
+//    @Override
+//    public void onRestoreInstanceState(Parcelable state) {
+//        if (state instanceof HzLayoutManager.SavedState) {
+//            HzLayoutManager.SavedState s = (HzLayoutManager.SavedState) state;
+//            mScrollOffset = s.scrollOffset;
+//            mReverse = s.reverse;
+//            mVanishOffset = s.vanishOffset;
+//            mScale = s.scale;
+//            mChildPeekSizeInput = s.childLayoutOffsetInput;
+//            mItemHeightWidthRatio = s.itemHeightWidthRatio;
+//            mOrientation = s.orientation;
+//            requestLayout();
+//        }
+//    }
 
     public static class SavedState implements Parcelable {
 
@@ -423,7 +429,7 @@ public class LadderLayoutManager extends RecyclerView.LayoutManager
         public SavedState() {
         }
 
-        SavedState(LadderLayoutManager.SavedState other) {
+        SavedState(HzLayoutManager.SavedState other) {
             scrollOffset = other.scrollOffset;
             childLayoutOffsetInput = other.childLayoutOffsetInput;
             orientation = other.orientation;
@@ -462,20 +468,19 @@ public class LadderLayoutManager extends RecyclerView.LayoutManager
             return 0;
         }
 
-        public static final Creator<SavedState> CREATOR
-                = new Creator<SavedState>() {
+        public static final Creator<HzLayoutManager.SavedState> CREATOR
+                = new Creator<HzLayoutManager.SavedState>() {
             @Override
-            public LadderLayoutManager.SavedState createFromParcel(Parcel in) {
-                return new LadderLayoutManager.SavedState(in);
+            public HzLayoutManager.SavedState createFromParcel(Parcel in) {
+                return new HzLayoutManager.SavedState(in);
             }
 
             @Override
-            public LadderLayoutManager.SavedState[] newArray(int size) {
-                return new LadderLayoutManager.SavedState[size];
+            public HzLayoutManager.SavedState[] newArray(int size) {
+                return new HzLayoutManager.SavedState[size];
             }
         };
     }
-
 
     public interface ChildDecorateHelper {
         /**
@@ -487,7 +492,7 @@ public class LadderLayoutManager extends RecyclerView.LayoutManager
         void decorateChild(View child, float posOffsetPercent, float layoutPercent, boolean isBottom);
     }
 
-    public static class DefaultChildDecorateHelper implements ChildDecorateHelper {
+    public static class DefaultChildDecorateHelper implements HzLayoutManager.ChildDecorateHelper {
         private float mElevation;
 
         public DefaultChildDecorateHelper(float maxElevation) {
