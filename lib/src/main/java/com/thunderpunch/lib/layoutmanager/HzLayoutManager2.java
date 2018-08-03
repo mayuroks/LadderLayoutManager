@@ -138,9 +138,10 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
             double maxOffset = mChildPeekSize * Math.pow(mScale, j);
             int childStart = (int) (remainSpace - offsetFactor * maxOffset);
             float layoutPercent = childStart * 1.0f / recyclerViewSpace;
+            float scale = (float) (Math.pow(mScale, j - 1) * (1 - offsetFactor * (1 - mScale)));
 
             ItemLayoutInfo info
-                    = new ItemLayoutInfo(childStart, 1.0f, offsetFactor, layoutPercent);
+                    = new ItemLayoutInfo(childStart, scale, offsetFactor, layoutPercent);
 
             layoutInfos.add(0, info);
             if (mMaxItemLayoutCount != UNLIMITED && j == mMaxItemLayoutCount - 1) {
@@ -150,6 +151,7 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
                     info.start = remainSpace;
                     info.positionOffsetFactor = 0;
                     info.layoutPercent = remainSpace / recyclerViewSpace;
+                    info.scaleXY = (float) Math.pow(mScale, j - 1);
                 }
                 break;
             }
@@ -164,6 +166,7 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
                 info.start = (int) (remainSpace + maxOffset);
                 info.positionOffsetFactor = 0;
                 info.layoutPercent = info.start / recyclerViewSpace;
+                info.scaleXY = (float) Math.pow(mScale, j - 1);
 //                Log.i(TAG, "fill: " + info.printInfo());
                 break;
             }
@@ -368,7 +371,7 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
             layoutDecoratedWithMargins(view, left, top, right, bottom);
         }
 
-        // TODO set scale of card based on layout info
+        // set scale of card based on layout info
         ViewCompat.setScaleX(view, layoutInfo.scaleXY);
         ViewCompat.setScaleY(view, layoutInfo.scaleXY);
 
@@ -530,6 +533,9 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
         @Override
         public void decorateChild(View child, float posOffsetFactor, float layoutPercent, boolean isBottom) {
             float elevation = (float) (layoutPercent * mElevation * 0.7 + mElevation * 0.3);
+
+            if (isBottom) elevation = Math.max(elevation, mElevation);
+
             ViewCompat.setElevation(child, elevation);
         }
     }
