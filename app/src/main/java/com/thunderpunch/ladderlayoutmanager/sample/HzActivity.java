@@ -32,10 +32,10 @@ public class HzActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hz);
 
-        llm = new HzLayoutManager2(1.5f, 0.85f, HzLayoutManager.HORIZONTAL).
+        llm = new HzLayoutManager2(1.5f, 0.85f, HzLayoutManager2.HORIZONTAL).
                 setChildDecorateHelper(new HzLayoutManager2.DefaultChildDecorateHelper(getResources().getDimension(R.dimen.item_max_elevation)));
         llm.setChildPeekSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                30, getResources().getDisplayMetrics()));
+                10, getResources().getDisplayMetrics()));
         llm.setMaxItemLayoutCount(5);
 
         rcv = (RecyclerView) findViewById(R.id.rcv);
@@ -43,25 +43,6 @@ public class HzActivity extends AppCompatActivity {
         new LadderSimpleSnapHelper().attachToRecyclerView(rcv);
         adapter = new HzActivity.HSAdapter();
         rcv.setAdapter(adapter);
-
-        final SeekBar sb = (SeekBar) findViewById(R.id.sb);
-        sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-//                llm.setVanishOffset((progress - 10) * 1.0f / 10);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-        sb.setProgress(8);
     }
 
     public void click(View view) {

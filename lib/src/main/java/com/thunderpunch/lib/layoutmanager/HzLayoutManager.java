@@ -165,9 +165,9 @@ public class HzLayoutManager extends RecyclerView.LayoutManager
 
     public void fill(RecyclerView.Recycler recycler) {
         /*
-        * This method is called when laying out children and
-        * scrolling vertically or updating
-        * */
+         * This method is called when laying out children and
+         * scrolling vertically or updating
+         * */
         int bottomItemPosition = (int) Math.floor(mScrollOffset / mChildSize[mOrientation]);//>=1
         int bottomItemVisibleSize = mScrollOffset % mChildSize[mOrientation];
         final float offsetPercent = mInterpolator.getInterpolation(
@@ -207,8 +207,10 @@ public class HzLayoutManager extends RecyclerView.LayoutManager
 
         if (bottomItemPosition < mChildCount) {
             final int start = space - bottomItemVisibleSize;
-            layoutInfos.add(new HzLayoutManager.ItemLayoutInfo(start, 1.0f,
-                    bottomItemVisibleSize * 1.0f / mChildSize[mOrientation], start * 1.0f / space).
+            layoutInfos.add(new HzLayoutManager.ItemLayoutInfo(start,
+                    1.0f,
+                    bottomItemVisibleSize * 1.0f / mChildSize[mOrientation],
+                    start * 1.0f / space).
                     setIsBottom());
         } else {
             bottomItemPosition -= 1;
