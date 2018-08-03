@@ -243,19 +243,19 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
 
         for (int i = bottomItemPosition - 1, j = 1, remainSpace = recyclerViewSpace - getChildSize(mOrientation); i >= 0; i--, j++) {
             double maxOffset = mChildPeekSize * Math.pow(mScale, j);
-            // TODO figure out a good formula to calculate start position
+            // figure out a good formula to calculate start position
             int childEnd = (int) (recyclerViewSpace - remainSpace + offsetFactor * maxOffset);
             int childStart = (int) (childEnd - getChildSize(mOrientation));
             float layoutPercent = remainSpace * 1.0f / recyclerViewSpace;
             float scale = (float) (Math.pow(mScale, j - 1) * (1 - offsetFactor * (1 - mScale)));
-//            Log.i(TAG, "forLoop: " + remainSpace + " " + recyclerViewSpace + " " + childStart + " " + layoutPercent);
+            Log.i(TAG, "forLoop: " + remainSpace + " " + recyclerViewSpace + " " + childStart + " " + layoutPercent);
 
             ItemLayoutInfo info
                     = new ItemLayoutInfo(childStart, scale, offsetFactor, layoutPercent);
 
             layoutInfos.add(0, info);
             if (mMaxItemLayoutCount != UNLIMITED && j == mMaxItemLayoutCount - 1) {
-//                Log.i(TAG, "fill2: mMaxItemLayoutCount != UNLIMITED && j == mMaxItemLayoutCount - 1");
+                Log.i(TAG, "fill2: mMaxItemLayoutCount != UNLIMITED && j == mMaxItemLayoutCount - 1");
                 if (offsetFactor != 0) {
                     int end = (int) (recyclerViewSpace - remainSpace + maxOffset);
                     info.start = end - getChildSize(mOrientation);
@@ -272,7 +272,7 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
 
             // If there is no space left, set layoutInfo so that the childView is just visible
             if (remainSpace <= 0) {
-//                Log.i(TAG, "fill2: remainSpace <= 0");
+                Log.i(TAG, "fill2: remainSpace <= 0");
                 remainSpace += maxOffset;
                 int end = (int) (recyclerViewSpace - remainSpace);
                 info.start = end - getChildSize(mOrientation);
