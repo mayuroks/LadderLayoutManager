@@ -133,7 +133,7 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
                 + getChildSize(mOrientation));
 
         for (int i = bottomItemPosition - 1, j = 1, remainSpace = recyclerViewSpace - getChildSize(mOrientation); i >= 0; i--, j++) {
-            Log.i(TAG, "forloop: " + remainSpace + " " + recyclerViewSpace);
+//            Log.i(TAG, "forloop: " + remainSpace + " " + recyclerViewSpace);
 
             double maxOffset = mChildPeekSize * Math.pow(mScale, j);
             int childStart = (int) (remainSpace - offsetFactor * maxOffset);
@@ -150,22 +150,21 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
                     info.start = remainSpace;
                     info.positionOffsetFactor = 0;
                     info.layoutPercent = remainSpace / recyclerViewSpace;
-                    Log.i(TAG, "fill: layoutPercent " + info.layoutPercent);
                 }
                 break;
             }
 
             // Reduce remain space for next card
             remainSpace -= maxOffset;
-            Log.i(TAG, "fill: offsetFactor " + offsetFactor + " remainSpace " + remainSpace + " maxOffset " + maxOffset);
+//            Log.i(TAG, "fill: offsetFactor " + offsetFactor + " remainSpace " + remainSpace + " maxOffset " + maxOffset);
 
             // If there is no space left, set layoutInfo so that the childView is just visible
             if (remainSpace <= 0) {
-                Log.i(TAG, "fill: remainSpace <= 0");
+//                Log.i(TAG, "fill: remainSpace <= 0");
                 info.start = (int) (remainSpace + maxOffset);
                 info.positionOffsetFactor = 0;
                 info.layoutPercent = info.start / recyclerViewSpace;
-                Log.i(TAG, "fill: layoutPercent " + info.layoutPercent);
+//                Log.i(TAG, "fill: " + info.printInfo());
                 break;
             }
         }
@@ -189,10 +188,10 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
         // Check if a child position is out of visible range
         final int startPos = bottomItemPosition - (layoutCount - 1);
         final int endPos = bottomItemPosition;
-        Log.i(TAG, "fill2: startPos " + startPos
-                + " endPos " + endPos
-                + " layoutCount " + layoutCount
-                + " bottomItemPosition " + bottomItemPosition);
+//        Log.i(TAG, "fill2: startPos " + startPos
+//                + " endPos " + endPos
+//                + " layoutCount " + layoutCount
+//                + " bottomItemPosition " + bottomItemPosition);
 
         // Is it necessary??
         final int childCount = getChildCount();
@@ -242,7 +241,7 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
         for (int i = bottomItemPosition - 1, j = 1, remainSpace = recyclerViewSpace - getChildSize(mOrientation); i >= 0; i--, j++) {
             double maxOffset = mChildPeekSize * Math.pow(mScale, j);
             // TODO figure out a good formula to calculate start position
-            int childEnd = (int) (recyclerViewSpace - remainSpace - offsetFactor * maxOffset);
+            int childEnd = (int) (recyclerViewSpace - remainSpace + offsetFactor * maxOffset);
             int childStart = (int) (childEnd - getChildSize(mOrientation));
             float layoutPercent = remainSpace * 1.0f / recyclerViewSpace;
             Log.i(TAG, "forLoop: " + remainSpace + " " + recyclerViewSpace + " " + childStart + " " + layoutPercent);
@@ -254,12 +253,10 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
             if (mMaxItemLayoutCount != UNLIMITED && j == mMaxItemLayoutCount - 1) {
                 Log.i(TAG, "fill2: mMaxItemLayoutCount != UNLIMITED && j == mMaxItemLayoutCount - 1");
                 if (offsetFactor != 0) {
-                    Log.i(TAG, "fill: offsetFactor != 0");
-                    int end = (int) (recyclerViewSpace - remainSpace - offsetFactor * maxOffset);
+                    int end = (int) (recyclerViewSpace - remainSpace + maxOffset);
                     info.start = end - getChildSize(mOrientation);
                     info.positionOffsetFactor = 0;
                     info.layoutPercent = remainSpace / recyclerViewSpace;
-                    Log.i(TAG, "fill: layoutPercent " + info.layoutPercent);
                 }
                 break;
             }
@@ -272,7 +269,8 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
             if (remainSpace <= 0) {
                 Log.i(TAG, "fill2: remainSpace <= 0");
                 remainSpace += maxOffset;
-                int end = (int) (recyclerViewSpace - remainSpace - offsetFactor * maxOffset);
+//                remainSpace = 0;
+                int end = (int) (recyclerViewSpace - remainSpace);
                 info.start = end - getChildSize(mOrientation);
                 info.positionOffsetFactor = 0;
                 info.layoutPercent = remainSpace / recyclerViewSpace;
@@ -284,7 +282,7 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
 
         if (bottomItemPosition < mChildCount) {
             Log.i(TAG, "fill2: bottomItemPosition < mChildCount " + bottomItemPosition + " " + mChildCount);
-            int start = bottomItemVisibleSize - recyclerViewSpace;
+            int start = bottomItemVisibleSize - getChildSize(mOrientation);
             float positionOffset = bottomItemVisibleSize * 1.0f / getChildSize(mOrientation);
             float layoutPercent = bottomItemVisibleSize * 1.0f / getChildSize(mOrientation);
 
@@ -374,7 +372,6 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
 
     @Override
     public int scrollHorizontallyBy(int dx, RecyclerView.Recycler recycler, RecyclerView.State state) {
-        Log.i(TAG, "scrollHorizontallyBy: scroll " + dx);
         int pendingScrollOffset = mScrollOffset + dx;
         mScrollOffset = makeScrollOffsetWithinRange2(pendingScrollOffset);
         fill2(recycler);
