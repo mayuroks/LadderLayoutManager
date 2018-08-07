@@ -26,7 +26,6 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
     private static final String TAG = "HzLayoutManager2";
     private static final int INVALIDATE_SCROLL_OFFSET = Integer.MAX_VALUE;
 
-    // TODO give random integers
     public static final int VERTICAL = 111;
     public static final int HORIZONTAL = 222;
 
@@ -37,7 +36,6 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
     private int mOrientation;
     private Interpolator mInterpolator;
 
-    // TODO write a function to setup child peek size
     // Peeksize is cards that are behind, how much region should be exposed
     private int mChildPeekSize;
     private int mChildPeekSizeInput;
@@ -113,7 +111,7 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
 
         mScrollOffset = getChildSize(mOrientation);
         mChildCount = itemCount;
-        mScrollOffset = makeScrollOffsetWithinRange2(mScrollOffset);
+        mScrollOffset = makeScrollOffsetWithinRange(mScrollOffset);
         fill2(recycler);
     }
 
@@ -225,6 +223,7 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
 
     public void fill2(RecyclerView.Recycler recycler) {
         Log.i(TAG, "fill2: scrollOffset " + mScrollOffset);
+        final int recyclerViewSpace = mOrientation == VERTICAL ? getVerticalSpace() : getHorizontalSpace();
 
         // Get bottom item position
         int bottomItemPosition = mChildCount - (int) Math.floor(mScrollOffset / getChildSize(mOrientation));//>=1
@@ -232,7 +231,6 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
 
         final float offsetFactor = mInterpolator.getInterpolation( // offsetFactor [0,1)
                 bottomItemVisibleSize * 1.0f / getChildSize(mOrientation));
-        final int recyclerViewSpace = mOrientation == VERTICAL ? getVerticalSpace() : getHorizontalSpace();
 
         ArrayList<ItemLayoutInfo> layoutInfos = new ArrayList<>();
 //        Log.i(TAG, "fill2: bottomItemPosition "
@@ -320,7 +318,7 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
 
             if (pos < startPos || pos > endPos) {
                 Log.i(TAG, "recycling view " + pos + " " + endPos + " " + startPos);
-                removeAndRecycleView(childView, recycler);
+//                removeAndRecycleView(childView, recycler);
             }
         }
 
@@ -388,7 +386,7 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
     @Override
     public int scrollHorizontallyBy(int dx, RecyclerView.Recycler recycler, RecyclerView.State state) {
         int pendingScrollOffset = mScrollOffset + dx;
-        mScrollOffset = makeScrollOffsetWithinRange2(pendingScrollOffset);
+        mScrollOffset = makeScrollOffsetWithinRange(pendingScrollOffset);
         fill2(recycler);
         return mScrollOffset - pendingScrollOffset + dx;
     }
@@ -421,19 +419,6 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
         return Math.min(offset, childCountOffset);
     }
 
-    private int makeScrollOffsetWithinRange2(int scrollOffset) {
-        /* TODO
-         * What does this formula do
-         * */
-        Log.i(TAG, "makeScrollOffsetWithinRange: before " + scrollOffset);
-        int offset = Math.max(getChildSize(mOrientation), scrollOffset);
-        int childCountOffset = mChildCount * getChildSize(mOrientation);
-
-        Log.i(TAG, "makeScrollOffsetWithinRange: after " + offset + " " + childCountOffset);
-        return Math.min(offset, childCountOffset);
-    }
-
-    // TODO measureChildWithExactlySize
     private void measureChildWithExactlySize(View child) {
         RecyclerView.LayoutParams lp = (RecyclerView.LayoutParams) child.getLayoutParams();
         final int widthSpec = View.MeasureSpec.makeMeasureSpec(
@@ -443,13 +428,11 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
         child.measure(widthSpec, heightSpec);
     }
 
-    // TODO convert2LayoutPosition
     public int convert2LayoutPosition(int adapterPosition) {
 //        return mReverse ? mChildCount - 1 - adapterPosition : adapterPosition;
         return adapterPosition;
     }
 
-    // TODO convert2AdapterPosition
     public int convert2AdapterPosition(int layoutPosition) {
 //        return mReverse ? mChildCount - 1 - layoutPosition : layoutPosition;
         return layoutPosition;
@@ -476,7 +459,6 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
         return this;
     }
 
-    // TODO ItemLayoutInfo
     private static class ItemLayoutInfo {
         // More like visibility index [0 ,1)
         float layoutPercent;
@@ -512,7 +494,6 @@ public class HzLayoutManager2 extends RecyclerView.LayoutManager {
         }
     }
 
-    // TODO Item decorator
     public interface ChildDecorateHelper {
         /**
          * @param child
